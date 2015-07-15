@@ -1,3 +1,4 @@
+from jinja2 import Template
 import psycopg2
 import os
 import csv
@@ -96,20 +97,32 @@ def load_data(path_to_csv, path_to_sql, table_name, text_file=False):
     conn.close()
 
 
+def create_report():
+    Template = ("""
+        <html>
+        <body>
+
+        </body>
+        </html>
+    """)
+
 if __name__ == "__main__":
     # load tables into postgres
     logging.info("Loading tables, if they don't currently exist, into Postges DB:\n")
-    logging.info("Loading consumer complaints table...")
+    logging.info("Loading the consumer complaints table...")
     load_data(CONSUMER_COMPLAINTS_CSV, CONSUMER_COMPLAINTS_CREATE_SQL, "consumer_complaints")
     logging.info("Done loading consumer complaints table!\n")
 
-    logging.info("Loading tmp_seq0015 table...")
+    logging.info("Loading estimate table 'tmp_seq0015'...")
     load_data(TMP_SEQ0015_CSV, TMP_SEQ0015_CREATE_SQL, "tmp_seq0015")
     logging.info("Done loading tmp_seq0015 table!\n")
 
-    logging.info("Loading g20135us table...")
+    logging.info("Loading geography table 'tmp_seq0015'...")
     load_data(GEOTABLE_CSV, GEOTABLE_CREATE_SQL, "g20135us")
     logging.info("Done loading g20135us table!\n")
+
+    # create the report template in html
+
 
     #TODO: Create table with just the sequence 15 data
 
