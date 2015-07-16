@@ -2,20 +2,9 @@ import jinja2
 import psycopg2
 import os
 import csv
+import settings
 import logging
 logging.basicConfig(level=logging.INFO)
-
-
-CONSUMER_COMPLAINTS_CREATE_SQL = "sql/create_consumer_complaints.sql"
-CONSUMER_COMPLAINTS_CSV = "data/Consumer_Complaints.csv"
-
-GEOTABLE_CREATE_SQL = "sql/create_g20135us.sql"
-GEOTABLE_CSV = "data/g20135us.csv"
-
-TMP_SEQ0015_CREATE_SQL = "sql/create_tmp_seq0015.sql"
-TMP_SEQ0015_CSV = "data/e20135us0015000_header.csv"
-
-REPORT_NAME = "data_report.html"
 
 
 def get_postgres_conn():
@@ -63,7 +52,8 @@ def load_data(path_to_csv, path_to_sql, table_name, text_file=False):
 
 def create_report():
     """
-    generate "mixed media" html report based on meaningful queries against data
+    Generate "mixed media" html report based on meaningful queries against data
+    Add any queries for report here and add them to the template
     """
 
     conn = get_postgres_conn()
@@ -78,7 +68,6 @@ def create_report():
     try:
         curs.execute(view_geodata_estimate)
         conn.commit()
-        logging.info("Check to see if view was correctly created!")
     except psycopg2.Error as e:
         logging.error(e)
 
@@ -165,7 +154,7 @@ def create_report():
     report = template.render(max_columns=max_columns, max_result=max_result, min_columns=min_columns, min_result=min_result, count=total_join_count)
 
 
-    writer = open(REPORT_NAME, 'w')
+    writer = open(settings.REPORT_NAME, 'w')
     writer.write(report)
     writer.close()
 
@@ -174,18 +163,19 @@ if __name__ == "__main__":
     logging.info("Loading tables, if they don't currently exist, into Postges DB:\n")
 
     logging.info("Loading the consumer complaints table...")
-    load_data(CONSUMER_COMPLAINTS_CSV, CONSUMER_COMPLAINTS_CREATE_SQL, "consumer_complaints")
+    load_data(settings.CONSUMER_COMPLAINTS_CSV, settings.CONSUMER_COMPLAINTS_CREATE_SQL, "consumer_complaints")
     logging.info("Done loading consumer complaints table!\n")
 
     logging.info("Loading estimate table 'tmp_seq0015'...")
-    load_data(TMP_SEQ0015_CSV, TMP_SEQ0015_CREATE_SQL, "tmp_seq0015")
+    load_data(settings.TMP_SEQ0015_CSV, settings.TMP_SEQ0015_CREATE_SQL, "tmp_seq0015")
     logging.info("Done loading tmp_seq0015 table!\n")
 
     logging.info("Loading geography table 'g20135us'...")
-    load_data(GEOTABLE_CSV, GEOTABLE_CREATE_SQL, "g20135us")
+    load_data(settings.GEOTABLE_CSV, settings.GEOTABLE_CREATE_SQL, "g20135us")
     logging.info("Done loading g20135us table!\n")
 
     # create the report template in html
+    logging.info("Generate the html report...")
     create_report()
 
 
