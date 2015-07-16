@@ -117,9 +117,7 @@ def create_report():
     except psycopg2.Error as e:
         logging.error(e)
 
-
-
-    template = jinja2.Template = ("""
+    template = jinja2.Template("""
         <h2>Report for Consumer Complaints and ACS Data</h2>
         <table border=1>
             <tr>
