@@ -1,4 +1,4 @@
-from jinja2 import Template
+import jinja2
 import psycopg2
 import os
 import csv
@@ -81,7 +81,7 @@ def create_report():
         where cc.zip = g.zcta5 group by cc.zip) as f group by f.zip, f.num
         order by f.num desc limit 20;"""
 
-    Template = ("""
+    template = jinja2.Template = ("""
         <html>
         <body>
 
