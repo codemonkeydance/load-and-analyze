@@ -5,15 +5,14 @@ Load consumer complaint and ACS data, then "blend" and analyze
 
 This code base uses two different data sets. The data files consumed are included in the project, but for more information on the data please see below:
 
-* Consumer Complaints
+*Consumer Complaints*
+* http://www.consumerfinance.gov/complaintdatabase/
+* Headers are included with the downloaded data file
 
-http://www.consumerfinance.gov/complaintdatabase/
-Headers are included with the downloaded data file
 
-
-* American Community Survey (ACS)
-
-ACS splits related data into separate files, headers are typically not included and can be found within the documenatation or a separate file. Please read the technical documentation for more information: http://www2.census.gov/acs2013_5yr/summaryfile/ACS_2013_SF_Tech_Doc.pdf
+*American Community Survey (ACS)*
+* ACS splits related data into separate files, headers are typically not included and can be found within the documenatation or a separate file. 
+* Please read the technical documentation for more information: http://www2.census.gov/acs2013_5yr/summaryfile/ACS_2013_SF_Tech_Doc.pdf
 
 
 **Instructions to run the program**
