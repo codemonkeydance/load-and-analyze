@@ -17,7 +17,10 @@ This code base uses two different data sets. The data files consumed are include
 
 **Instructions to run the program**
 
-1 - Install postgreSQL
+1 - Install PostgreSQL (If you wish to use another data store just amend the code appropriately)
+
+3 - Export relevant environment variables
+I export "sensitive" program information as environment variables in the code
 
 2 - Install all packages in the "requirements.txt" file. I use a virtual environment to keep my project setup separate from my overall system setup. As long as pip is install the following command will work:
 ```
