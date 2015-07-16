@@ -75,14 +75,16 @@ def create_report():
     conn = get_postgres_conn()
     curs = conn.cursor()
 
-    view_geodata_total_estimate = """create materialized view zcta5_B06010001 as
-        select g.logrecno, g.zcta5, t.B06010001 from g20135us as g, tmp_seq0015 as t
-        where g.logrecno = t.logrecno;"""
+    # view joining zcta5 with B06010001 - B06010003 (total, no income, with income)
+    view_geodata_estimate = """create materialized view zcta5_B06010001_3 as
+        select g.logrecno, g.zcta5, t.B06010001, t.B06010002, t.B06010003
+        from g20135us as g, tmp_seq0015 as t where g.logrecno = t.logrecno;"""
 
     # first create any views necessary for report
     try:
-        curs.execute(view_geodata_total_estimate)
+        curs.execute(view_geodata_estimate)
         conn.commit()
+        logging.info("Check to see if view was correctly created!")
     except psycopg2.Error as e:
         logging.error(e)
 
@@ -97,30 +99,31 @@ def create_report():
 
     # max complaints sorted by zip code against total Population 15 years and over in the United States (B06010_001)
     max_complaints_by_zip_total = """select MAX(f.num), f.zip, f.B06010001 from
-        (select count(*) as num, zip, B06010001 from consumer_complaints as cc, zcta5_b06010001 as zb
+        (select count(*) as num, zip, B06010001 from consumer_complaints as cc, zcta5_B06010001_3 as zb
         where cc.zip = zb.zcta5 group by cc.zip, zb.B06010001) as f
         group by f.B06010001, f.zip, f.num order by f.num desc limit 20;"""
 
     min_complaints_by_zip_total = """select MIN(f.num), f.zip, f.B06010001 from
-        (select count(*) as num, zip, B06010001 from consumer_complaints as cc, zcta5_b06010001 as zb
+        (select count(*) as num, zip, B06010001 from consumer_complaints as cc, zcta5_B06010001_3 as zb
         where cc.zip = zb.zcta5 group by cc.zip, zb.B06010001) as f
         group by f.B06010001, f.zip, f.num order by f.num asc limit 20;"""
 
 
-
     try:
-        curs.execute(zip_codes_with_most_complaints)
+        curs.execute(max_complaints_by_zip_total)
+        columns = [desc[0] for desc in curs.description]
         result = curs.fetchall()
+        logging.info("********\n{}\n{}".format(columns, result))
     except psycopg2.Error as e:
         logging.error(e)
-
-    template = jinja2.Template = ("""
-        <html>
-        <body>
-
-        </body>
-        </html>
-    """)
+    #
+    # template = jinja2.Template = ("""
+    #     <html>
+    #     <body>
+    #
+    #     </body>
+    #     </html>
+    # """)
 
 
 if __name__ == "__main__":
@@ -134,12 +137,12 @@ if __name__ == "__main__":
     load_data(TMP_SEQ0015_CSV, TMP_SEQ0015_CREATE_SQL, "tmp_seq0015")
     logging.info("Done loading tmp_seq0015 table!\n")
 
-    logging.info("Loading geography table 'tmp_seq0015'...")
+    logging.info("Loading geography table 'g20135us'...")
     load_data(GEOTABLE_CSV, GEOTABLE_CREATE_SQL, "g20135us")
     logging.info("Done loading g20135us table!\n")
 
     # create the report template in html
-    #create_report()
+    create_report()
 
     #TODO: Create table with just the sequence 15 data
 
