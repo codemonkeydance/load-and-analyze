@@ -32,36 +32,6 @@ def get_postgres_conn():
     )
 
 
-# def load_consumer_data():
-#     """
-#     load consumer complaint csv to postgres
-#     """
-#
-#     # first read header file and create table with those fields
-#     # f = open(CONSUMER_COMPLAINTS_DATA_PATH, 'rb')
-#     # reader = csv.reader(f)
-#     # headers = reader.next()
-#
-#     consumer_complaints_data = open(CONSUMER_COMPLAINTS_CSV, 'r')
-#
-#     conn = get_postgres_conn()
-#     curs = conn.cursor()
-#
-#     # if consumer complaints database doesn't exist load it
-#     try:
-#         curs.execute(open(CONSUMER_COMPLAINTS_CREATE_SQL, "r").read())
-#         sql_statement = "COPY geotable FROM STDIN WITH CSV HEADER DELIMITER AS ','"
-#         curs.copy_expert(sql=sql_statement, file=consumer_complaints_data)
-#     except Exception:
-#         logging.error("Issue executing sql '{}' to postgres".format(sql_statement))
-#
-#     conn.commit()
-#     curs.close()
-#
-#     consumer_complaints_data.close()
-#     conn.close()
-
-
 def load_data(path_to_csv, path_to_sql, table_name, text_file=False):
     """
     load consumer complaint csv to postgres
