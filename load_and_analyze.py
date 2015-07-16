@@ -72,14 +72,47 @@ def create_report():
     generate "mixed media" html report based on meaningful queries against data
     """
 
+    conn = get_postgres_conn()
+    curs = conn.cursor()
+
+    view_geodata_total_estimate = """create materialized view zcta5_B06010001 as
+        select g.logrecno, g.zcta5, t.B06010001 from g20135us as g, tmp_seq0015 as t
+        where g.logrecno = t.logrecno;"""
+
+    # first create any views necessary for report
+    try:
+        curs.execute(view_geodata_total_estimate)
+        conn.commit()
+    except psycopg2.Error as e:
+        logging.error(e)
+
     count_of_joined_data = """select count(*)
         from consumer_complaints as cc, g20135us as g, tmp_seq0015 as tmp
         where cc.zip = g.zcta5 and g.logrecno = tmp.logrecno;"""
 
-    zip_codes_with_most_complaints = """select MAX(f.num), f.zip from
-        (select count(*) as num, zip from consumer_complaints as cc, g20135us as g
-        where cc.zip = g.zcta5 group by cc.zip) as f group by f.zip, f.num
-        order by f.num desc limit 20;"""
+    # zip_codes_with_most_complaints = """select MAX(f.num), f.zip from
+    #     (select count(*) as num, zip from consumer_complaints as cc, g20135us as g
+    #     where cc.zip = g.zcta5 group by cc.zip) as f group by f.zip, f.num
+    #     order by f.num desc limit 20;"""
+
+    # max complaints sorted by zip code against total Population 15 years and over in the United States (B06010_001)
+    max_complaints_by_zip_total = """select MAX(f.num), f.zip, f.B06010001 from
+        (select count(*) as num, zip, B06010001 from consumer_complaints as cc, zcta5_b06010001 as zb
+        where cc.zip = zb.zcta5 group by cc.zip, zb.B06010001) as f
+        group by f.B06010001, f.zip, f.num order by f.num desc limit 20;"""
+
+    min_complaints_by_zip_total = """select MIN(f.num), f.zip, f.B06010001 from
+        (select count(*) as num, zip, B06010001 from consumer_complaints as cc, zcta5_b06010001 as zb
+        where cc.zip = zb.zcta5 group by cc.zip, zb.B06010001) as f
+        group by f.B06010001, f.zip, f.num order by f.num asc limit 20;"""
+
+
+
+    try:
+        curs.execute(zip_codes_with_most_complaints)
+        result = curs.fetchall()
+    except psycopg2.Error as e:
+        logging.error(e)
 
     template = jinja2.Template = ("""
         <html>
@@ -88,6 +121,7 @@ def create_report():
         </body>
         </html>
     """)
+
 
 if __name__ == "__main__":
     # load tables into postgres
@@ -105,7 +139,7 @@ if __name__ == "__main__":
     logging.info("Done loading g20135us table!\n")
 
     # create the report template in html
-
+    #create_report()
 
     #TODO: Create table with just the sequence 15 data
 
