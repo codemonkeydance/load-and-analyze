@@ -68,6 +68,19 @@ def load_data(path_to_csv, path_to_sql, table_name, text_file=False):
 
 
 def create_report():
+    """
+    generate "mixed media" html report based on meaningful queries against data
+    """
+
+    count_of_joined_data = """select count(*)
+        from consumer_complaints as cc, g20135us as g, tmp_seq0015 as tmp
+        where cc.zip = g.zcta5 and g.logrecno = tmp.logrecno;"""
+
+    zip_codes_with_most_complaints = """select MAX(f.num), f.zip from
+        (select count(*) as num, zip from consumer_complaints as cc, g20135us as g
+        where cc.zip = g.zcta5 group by cc.zip) as f group by f.zip, f.num
+        order by f.num desc limit 20;"""
+
     Template = ("""
         <html>
         <body>
