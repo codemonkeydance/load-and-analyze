@@ -15,7 +15,7 @@ GEOTABLE_CSV = "data/g20135us.csv"
 TMP_SEQ0015_CREATE_SQL = "sql/create_tmp_seq0015.sql"
 TMP_SEQ0015_CSV = "data/e20135us0015000_header.csv"
 
-#ESTIMATE_INCOME_DATA = "..data/e20135us0015000.txt"
+REPORT_NAME = "data_report.html"
 
 
 def get_postgres_conn():
@@ -37,13 +37,7 @@ def load_data(path_to_csv, path_to_sql, table_name, text_file=False):
     load consumer complaint csv to postgres
     """
 
-    if text_file:
-        f = open(ESTIMATE_INCOME_DATA, 'rb')
-        #reader = csv.reader(f)
-        csv_data = csv.reader(f)
-        headers = csv_data.next()
-    else:
-        csv_data = open(path_to_csv, 'r')
+    csv_data = open(path_to_csv, 'r')
 
     conn = get_postgres_conn()
     curs = conn.cursor()
@@ -109,6 +103,11 @@ def create_report():
         where cc.zip = zb.zcta5 group by cc.zip, zb.B06010001) as f
         group by f.B06010001, f.zip, f.num order by f.num asc limit 20;"""
 
+    try:
+        curs.execute(count_of_joined_data)
+        total_join_count = curs.fetchone()
+    except psycopg2.Error as e:
+        logging.error(e)
 
     try:
         curs.execute(max_complaints_by_zip_total)
@@ -126,6 +125,9 @@ def create_report():
 
     template = jinja2.Template("""
         <h2>Report for Consumer Complaints and ACS Data</h2>
+
+        <p>Total count of the joined data set by zip for report: Consumer Complaints and ACS:</p>
+        <strong>{{count}}</strong>
 
         <p>max complaints sorted by zip code against total Population 15 years and over in the United States (B06010_001)</p>
         <table border=1>
@@ -160,15 +162,17 @@ def create_report():
         </table>
     """)
 
-    report = template.render(max_columns=max_columns, max_result=max_result, min_columns=min_columns, min_result=min_result)
+    report = template.render(max_columns=max_columns, max_result=max_result, min_columns=min_columns, min_result=min_result, count=total_join_count)
 
-    writer = open("data_report.html", 'w')
+
+    writer = open(REPORT_NAME, 'w')
     writer.write(report)
     writer.close()
 
 if __name__ == "__main__":
     # load tables into postgres
     logging.info("Loading tables, if they don't currently exist, into Postges DB:\n")
+
     logging.info("Loading the consumer complaints table...")
     load_data(CONSUMER_COMPLAINTS_CSV, CONSUMER_COMPLAINTS_CREATE_SQL, "consumer_complaints")
     logging.info("Done loading consumer complaints table!\n")
@@ -183,8 +187,6 @@ if __name__ == "__main__":
 
     # create the report template in html
     create_report()
-
-    #TODO: Create table with just the sequence 15 data
 
 
 
