@@ -103,6 +103,7 @@ def create_report():
         where cc.zip = zb.zcta5 group by cc.zip, zb.B06010001) as f
         group by f.B06010001, f.zip, f.num order by f.num desc limit 20;"""
 
+    # min complaints sorted by zip code against total Population 15 years and over in the United States (B06010_001)
     min_complaints_by_zip_total = """select MIN(f.num), f.zip, f.B06010001 from
         (select count(*) as num, zip, B06010001 from consumer_complaints as cc, zcta5_B06010001_3 as zb
         where cc.zip = zb.zcta5 group by cc.zip, zb.B06010001) as f
@@ -111,29 +112,55 @@ def create_report():
 
     try:
         curs.execute(max_complaints_by_zip_total)
-        columns = [desc[0] for desc in curs.description]
-        result = curs.fetchall()
-        logging.info("********\n{}\n{}".format(columns, result))
+        max_columns = [desc[0] for desc in curs.description]
+        max_result = curs.fetchall()
+    except psycopg2.Error as e:
+        logging.error(e)
+
+    try:
+        curs.execute(min_complaints_by_zip_total)
+        min_columns = [desc[0] for desc in curs.description]
+        min_result = curs.fetchall()
     except psycopg2.Error as e:
         logging.error(e)
 
     template = jinja2.Template("""
         <h2>Report for Consumer Complaints and ACS Data</h2>
+
+        <p>max complaints sorted by zip code against total Population 15 years and over in the United States (B06010_001)</p>
         <table border=1>
             <tr>
-                <th>{{columns[0]}}</th>
-                <th>{{columns[1]}}</th>
-                <th>{{columns[2]}}</th>
+                <th>{{max_columns[0]}}</th>
+                <th>{{max_columns[1]}}</th>
+                <th>{{max_columns[2]}}</th>
             </tr>
-            {% for row in result %}
-                <td>{{row[0]}}</td>
-                <td>{{row[1]}}</td>
-                <td>{{row[2]}}</td>
+            {% for row in max_result %}
+                <tr>
+                    <td>{{row[0]}}</td>
+                    <td>{{row[1]}}</td>
+                    <td>{{row[2]}}</td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <p>max complaints sorted by zip code against total Population 15 years and over in the United States (B06010_001)</p>
+        <table border=1>
+            <tr>
+                <th>{{min_columns[0]}}</th>
+                <th>{{min_columns[1]}}</th>
+                <th>{{min_columns[2]}}</th>
+            </tr>
+            {% for row in min_result %}
+                <tr>
+                    <td>{{row[0]}}</td>
+                    <td>{{row[1]}}</td>
+                    <td>{{row[2]}}</td>
+                </tr>
             {% endfor %}
         </table>
     """)
 
-    report = template.render(columns=columns, result=result)
+    report = template.render(max_columns=max_columns, max_result=max_result, min_columns=min_columns, min_result=min_result)
 
     writer = open("data_report.html", 'w')
     writer.write(report)
