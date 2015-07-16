@@ -116,15 +116,30 @@ def create_report():
         logging.info("********\n{}\n{}".format(columns, result))
     except psycopg2.Error as e:
         logging.error(e)
-    #
-    # template = jinja2.Template = ("""
-    #     <html>
-    #     <body>
-    #
-    #     </body>
-    #     </html>
-    # """)
 
+
+
+    template = jinja2.Template = ("""
+        <h2>Report for Consumer Complaints and ACS Data</h2>
+        <table border=1>
+            <tr>
+                <th>{{columns[0]}}</th>
+                <th>{{columns[1]}}</th>
+                <th>{{columns[2]}}</th>
+            </tr>
+            {% for row in result %}
+                <td>{{row[0]}}</td>
+                <td>{{row[1]}}</td>
+                <td>{{row[2]}}</td>
+            {% endfor %}
+        </table>
+    """)
+
+    report = template.render(columns=columns, result=result)
+
+    writer = open("data_report.html", 'w')
+    writer.write(report)
+    writer.close()
 
 if __name__ == "__main__":
     # load tables into postgres
